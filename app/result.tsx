@@ -3,20 +3,80 @@ import * as Sharing from 'expo-sharing';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { TEMPLATES } from '../constants/Templates';
+import { supabase } from '../lib/supabase';
 
 export default function ResultScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const [generating, setGenerating] = useState(true);
+  const [resultImageUrl, setResultImageUrl] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const template = TEMPLATES.find(t => t.id === params.templateId) || TEMPLATES[0];
 
   useEffect(() => {
-    // Simulate API call for Face Swap + Composition
-    const timer = setTimeout(() => {
-      setGenerating(false);
-    }, 3000); // 3 seconds fake generation
+    async function processFaceSwap() {
+      try {
+        setGenerating(true);
+        setErrorMsg(null);
 
-    return () => clearTimeout(timer);
+        let finalFaceUrl = params.faceImage as string;
+
+        // If user uploaded a local face image, we must upload it to a public storage first
+        // so fal.ai can access it. For MVP, we'll try to use a Supabase Storage bucket.
+        // If there's no faceImage provided by user, we just return the template.
+        if (!finalFaceUrl) {
+          setResultImageUrl(null);
+          setGenerating(false);
+          return;
+        }
+
+        // 1. Read local file as Base64 (Compatible with Web & Native)
+        const response = await fetch(finalFaceUrl);
+        const blob = await response.blob();
+
+        const faceDataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+        // 2. Call Edge Function (Face Swap)
+        const { data: swapData, error: swapError } = await supabase.functions.invoke('face-swap', {
+          body: {
+            templateImageUrl: template.publicUrl,
+            swapImageBase64: faceDataUrl
+          }
+        });
+
+        console.log("Edge Function Response", swapData, swapError);
+
+        if (swapError) throw new Error("Error al generar meme: " + swapError.message + " | " + JSON.stringify(swapError));
+
+        // fal.ai returns { data: { image: { url: '...' } }, requestId: '...' }
+        if (swapData && swapData.data && swapData.data.image && swapData.data.image.url) {
+          setResultImageUrl(swapData.data.image.url);
+        } else if (swapData && swapData.image && swapData.image.url) {
+          setResultImageUrl(swapData.image.url); // Fallback if API response shape changes
+        } else {
+          if (swapData && swapData.error) {
+            throw new Error("API Error: " + swapData.error);
+          }
+          throw new Error("Respuesta Inesperada IA: " + JSON.stringify(swapData));
+        }
+
+      } catch (err) {
+        if (err instanceof Error) {
+          setErrorMsg(err.message);
+        } else {
+          setErrorMsg("Error desconocido");
+        }
+      } finally {
+        setGenerating(false);
+      }
+    }
+
+    processFaceSwap();
   }, []);
 
   const handleShare = async () => {
@@ -35,12 +95,24 @@ export default function ResultScreen() {
           <Text style={styles.loadingText}>Procesando magia con IA...</Text>
           <Text style={styles.loadingSubtext}>Intercambiando caras y pintando píxeles</Text>
         </View>
+      ) : errorMsg ? (
+        <View style={styles.resultContainer}>
+          <Text style={styles.title}>¡Oh no, un error!</Text>
+          <Text style={{ color: 'red', textAlign: 'center', marginBottom: 20 }}>{errorMsg}</Text>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.navigate('/')}>
+            <Text style={styles.backButtonText}>Volver a intentar</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
         <View style={styles.resultContainer}>
           <Text style={styles.title}>¡Memeo Listo!</Text>
 
           <View style={styles.imagePlaceholder}>
-            <Image source={template.image} style={styles.memeImage} resizeMode="cover" />
+            <Image
+              source={resultImageUrl ? { uri: resultImageUrl } : template.image}
+              style={styles.memeImage}
+              resizeMode="cover"
+            />
             <Text style={styles.previewTextTop}>{params.topText}</Text>
             <Text style={styles.previewTextBottom}>{params.bottomText}</Text>
           </View>
