@@ -44,10 +44,10 @@ serve(async (req) => {
     )
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || String(error) }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
+        status: 200, // Retornamos 200 para que supabase-js pueda leer el cuerpo de la respuesta con el motivo de error
       },
     )
   }

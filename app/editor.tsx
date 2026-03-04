@@ -1,3 +1,4 @@
+import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -14,15 +15,33 @@ export default function EditorScreen() {
   const [faceImage, setFaceImage] = useState<string | null>(null);
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
 
-    if (!result.canceled) {
-      setFaceImage(result.assets[0].uri);
+      if (!result.canceled) {
+        try {
+          // Process image to ensure format is JPEG and size is reasonable 
+          // (HEIF from iOS can cause Fal.ai and Supabase 500 errors)
+          const manipResult = await ImageManipulator.manipulateAsync(
+            result.assets[0].uri,
+            [{ resize: { width: 800 } }], // Compress width to 800px, height will adjust automatically to 1:1
+            { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+          );
+
+          setFaceImage(manipResult.uri);
+        } catch (manipError: any) {
+          console.error("Image manipulation error:", manipError);
+          // Fallback: Si la manipulación falla (ej. incompatibilidad Web con HEIC o falta de binarios), usamos la original
+          setFaceImage(result.assets[0].uri);
+        }
+      }
+    } catch (error: any) {
+      alert("Uh oh, no pudimos abrir la galería: " + (error?.message || String(error)));
     }
   };
 

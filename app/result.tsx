@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { TEMPLATES } from '../constants/Templates';
 import { supabase } from '../lib/supabase';
 
@@ -11,7 +11,9 @@ export default function ResultScreen() {
   const [generating, setGenerating] = useState(true);
   const [resultImageUrl, setResultImageUrl] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
   const template = TEMPLATES.find(t => t.id === params.templateId) || TEMPLATES[0];
+  const memeViewRef = useRef<View>(null);
 
   useEffect(() => {
     async function processFaceSwap() {
@@ -80,10 +82,42 @@ export default function ResultScreen() {
   }, []);
 
   const handleShare = async () => {
-    // Sharing logic using expo-sharing (we will implement view-shot later)
-    if (await Sharing.isAvailableAsync()) {
-      // Sharing.shareAsync(localUri);
-      alert("Compartir (Placeholder)");
+    try {
+      setIsCapturing(true);
+
+      if (Platform.OS === 'web') {
+        const html2canvas = require('html2canvas');
+        const domNode = memeViewRef.current as any;
+
+        const canvas = await html2canvas(domNode, { useCORS: true, allowTaint: true });
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+        // Simular clic en un enlace de descarga
+        const link = document.createElement('a');
+        link.download = `memeo-${Date.now()}.jpg`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        const { captureRef } = require('react-native-view-shot');
+        const uri = await captureRef(memeViewRef, { format: 'jpg', quality: 0.9 });
+
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(uri, {
+            dialogTitle: 'Compartir mi Memeo',
+            mimeType: 'image/jpeg',
+            UTI: 'public.jpeg',
+          });
+        } else {
+          alert("La función de compartir no está disponible en este dispositivo.");
+        }
+      }
+    } catch (err) {
+      alert("Uh oh, hubo un problema al compartir el meme.");
+      console.error(err);
+    } finally {
+      setIsCapturing(false);
     }
   };
 
@@ -107,7 +141,7 @@ export default function ResultScreen() {
         <View style={styles.resultContainer}>
           <Text style={styles.title}>¡Memeo Listo!</Text>
 
-          <View style={styles.imagePlaceholder}>
+          <View ref={memeViewRef} style={styles.imagePlaceholder} collapsable={false}>
             <Image
               source={resultImageUrl ? { uri: resultImageUrl } : template.image}
               style={styles.memeImage}
@@ -117,8 +151,10 @@ export default function ResultScreen() {
             <Text style={styles.previewTextBottom}>{params.bottomText}</Text>
           </View>
 
-          <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-            <Text style={styles.shareButtonText}>Compartir / Guardar</Text>
+          <TouchableOpacity style={styles.shareButton} onPress={handleShare} disabled={isCapturing}>
+            <Text style={styles.shareButtonText}>
+              {isCapturing ? "Generando meme..." : "Compartir Memeo (WhatsApp, etc)"}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.backButton} onPress={() => router.navigate('/')}>
