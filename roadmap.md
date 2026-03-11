@@ -3,12 +3,12 @@
 Este documento detalla los próximos pasos y funcionalidades a desarrollar en el proyecto, organizados por prioridad y con su estado actual.
 
 ## 1. Historial de memes
-**Estado**: ⭕️ Pendiente
+**Estado**: ✅ Completado
 - **Objetivo**: Permitir al usuario visualizar los memes que ha generado y guardado previamente.
 - **Tareas**:
-  - [ ] Crear interfaz (pantalla o tab) para listar los memes generados.
-  - [ ] Implementar persistencia: Guardar referencias localmente (AsyncStorage/SQLite) o en la nube (tablas de Supabase + Storage).
-  - [ ] Opción para compartir o eliminar memes del historial.
+  - [x] Crear interfaz (pantalla o tab) para listar los memes generados.
+  - [x] Implementar persistencia: Guardar referencias localmente (AsyncStorage/SQLite) o en la nube (tablas de Supabase + Storage).
+  - [x] Opción para compartir o eliminar memes del historial.
 
 ## 2. Historial de caras
 **Estado**: ⭕️ Pendiente

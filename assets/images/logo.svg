@@ -1,0 +1,14 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo oscuro con bordes redondeados -->
+  <rect width="200" height="200" rx="48" fill="#0A0A0A" />
+  
+  <!-- Letra M estilizada -->
+  <path d="M50 130 L50 70 L100 110 L150 70 L150 130" stroke="#00FF88" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Sonrisa (Meme) -->
+  <path d="M65 155 Q100 180 135 155" stroke="#00FF88" stroke-width="14" stroke-linecap="round" />
+
+  <!-- Acentos visuales -->
+  <circle cx="50" cy="50" r="8" fill="#00FF88" />
+  <circle cx="150" cy="50" r="8" fill="#00FF88" />
+</svg>

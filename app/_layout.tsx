@@ -15,9 +15,9 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="index" options={{ title: 'Elige tu Meme' }} />
+        <Stack.Screen name="index" options={{ headerShown: false, title: 'Elige tu Meme' }} />
         <Stack.Screen name="editor" options={{ title: 'Editar Meme' }} />
-        <Stack.Screen name="result" options={{ title: 'Tu Memeo', presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="result" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

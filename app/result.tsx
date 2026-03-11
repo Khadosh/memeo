@@ -3,6 +3,7 @@ import * as Sharing from 'expo-sharing';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { TEMPLATES } from '../constants/Templates';
+import { saveMemeToHistory } from '../lib/history';
 import { supabase } from '../lib/supabase';
 
 export default function ResultScreen() {
@@ -12,6 +13,7 @@ export default function ResultScreen() {
   const [resultImageUrl, setResultImageUrl] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [savedToHistory, setSavedToHistory] = useState(false);
   const template = TEMPLATES.find(t => t.id === params.templateId) || TEMPLATES[0];
   const memeViewRef = useRef<View>(null);
 
@@ -121,6 +123,26 @@ export default function ResultScreen() {
     }
   };
 
+  const handleCaptureAndSave = async () => {
+    if (savedToHistory || !resultImageUrl) return;
+
+    try {
+      if (Platform.OS === 'web') {
+        const html2canvas = require('html2canvas');
+        const canvas = await html2canvas(memeViewRef.current, { useCORS: true, allowTaint: true });
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        await saveMemeToHistory(dataUrl, template.id);
+      } else {
+        const { captureRef } = require('react-native-view-shot');
+        const uri = await captureRef(memeViewRef, { format: 'jpg', quality: 0.9 });
+        await saveMemeToHistory(uri, template.id);
+      }
+      setSavedToHistory(true);
+    } catch (err) {
+      console.error("Error saving to history automatically:", err);
+    }
+  };
+
   return (
     <View style={styles.container}>
       {generating ? (
@@ -146,6 +168,7 @@ export default function ResultScreen() {
               source={resultImageUrl ? { uri: resultImageUrl } : template.image}
               style={styles.memeImage}
               resizeMode="cover"
+              onLoadEnd={handleCaptureAndSave}
             />
             <Text style={styles.previewTextTop}>{params.topText}</Text>
             <Text style={styles.previewTextBottom}>{params.bottomText}</Text>

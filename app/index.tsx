@@ -1,5 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { HeaderMenu } from '../components/HeaderMenu';
+import { Image as ExpoImage } from 'expo-image';
 import { TEMPLATES } from '../constants/Templates';
 
 export default function HomeScreen() {
@@ -25,9 +29,25 @@ export default function HomeScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.headerTitle}>Selecciona una Plantilla</Text>
-      <Text style={styles.headerSubtitle}>Elige un meme clásico para empezar tu creación</Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.topNav}>
+        <View style={styles.logoContainer}>
+          <ExpoImage 
+            source={require('../assets/images/logo.svg')} 
+            style={styles.logoImage} 
+            contentFit="contain" 
+          />
+          <Text style={styles.logoText}>Memeo</Text>
+        </View>
+        <HeaderMenu />
+      </View>
+
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.headerTitle}>Selecciona una Plantilla</Text>
+          <Text style={styles.headerSubtitle}>Elige un meme clásico para empezar tu creación</Text>
+        </View>
+      </View>
 
       <FlatList
         data={TEMPLATES}
@@ -36,8 +56,9 @@ export default function HomeScreen() {
         numColumns={2}
         contentContainerStyle={styles.listContainer}
         columnWrapperStyle={styles.columnWrapper}
+        showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -46,11 +67,40 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0A0A0A', // Dark aesthetic
   },
+  topNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoImage: {
+    width: 36,
+    height: 36,
+    marginRight: 12,
+  },
+  logoText: {
+    color: '#00FF88',
+    fontSize: 26,
+    fontWeight: '900',
+    fontStyle: 'italic',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 24,
+    paddingRight: 20,
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: '800',
     color: '#FFFFFF',
-    marginTop: 24,
     marginLeft: 20,
   },
   headerSubtitle: {
@@ -58,7 +108,6 @@ const styles = StyleSheet.create({
     color: '#888888',
     marginLeft: 20,
     marginTop: 8,
-    marginBottom: 24,
   },
   listContainer: {
     paddingHorizontal: 16,
