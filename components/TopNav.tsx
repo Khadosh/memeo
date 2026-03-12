@@ -13,24 +13,29 @@ export function TopNav({ showBackBtn = false }: TopNavProps) {
 
   return (
     <View style={styles.topNav}>
-      <View style={styles.leftContainer}>
-        {showBackBtn ? (
+      {/* Left Slot: Back Button or Empty Space */}
+      <View style={styles.leftSlot}>
+        {showBackBtn && (
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#00FF88" />
-            <Text style={styles.backText}>Volver</Text>
           </TouchableOpacity>
-        ) : (
-          <View style={styles.logoContainer}>
-            <ExpoImage 
-              source={require('../assets/images/logo.svg')} 
-              style={styles.logoImage} 
-              contentFit="contain" 
-            />
-            <Text style={styles.logoText}>Memeo</Text>
-          </View>
         )}
       </View>
-      <HeaderMenu />
+
+      {/* Center Slot: Always Logo */}
+      <View style={styles.centerSlot}>
+        <ExpoImage 
+          source={require('../assets/images/logo.svg')} 
+          style={styles.logoImage} 
+          contentFit="contain" 
+        />
+        <Text style={styles.logoText}>Memeo</Text>
+      </View>
+
+      {/* Right Slot: Menu (Only if no back button, meaning Home) or Empty Space */}
+      <View style={styles.rightSlot}>
+        {!showBackBtn && <HeaderMenu />}
+      </View>
     </View>
   );
 }
@@ -42,36 +47,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 8,
+    paddingBottom: 12,
     backgroundColor: '#0A0A0A',
+    borderBottomWidth: 1,
+    borderBottomColor: '#222',
   },
-  leftContainer: {
+  leftSlot: {
     flex: 1,
-    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
-  logoContainer: {
+  centerSlot: {
+    flex: 2,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rightSlot: {
+    flex: 1,
+    alignItems: 'flex-end',
   },
   logoImage: {
-    width: 36,
-    height: 36,
-    marginRight: 12,
+    width: 28,
+    height: 28,
+    marginRight: 8,
   },
   logoText: {
     color: '#00FF88',
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: '900',
     fontStyle: 'italic',
   },
   backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  backText: {
-    color: '#00FF88',
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 8,
+    padding: 8,
+    marginLeft: -8, // slight offset to align visually with screen padding
   },
 });

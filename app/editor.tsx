@@ -1,6 +1,7 @@
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,7 +17,23 @@ export default function EditorScreen() {
   const [bottomText, setBottomText] = useState('');
   const [faceImage, setFaceImage] = useState<string | null>(null);
 
-  const pickImage = async () => {
+  const processImageResult = async (result: ImagePicker.ImagePickerResult) => {
+    if (!result.canceled) {
+      try {
+        const manipResult = await ImageManipulator.manipulateAsync(
+          result.assets[0].uri,
+          [{ resize: { width: 800 } }],
+          { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+        );
+        setFaceImage(manipResult.uri);
+      } catch (manipError: any) {
+        console.error("Image manipulation error:", manipError);
+        setFaceImage(result.assets[0].uri);
+      }
+    }
+  };
+
+  const pickImageFromGallery = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
@@ -24,27 +41,34 @@ export default function EditorScreen() {
         aspect: [1, 1],
         quality: 0.8,
       });
-
-      if (!result.canceled) {
-        try {
-          // Process image to ensure format is JPEG and size is reasonable 
-          // (HEIF from iOS can cause Fal.ai and Supabase 500 errors)
-          const manipResult = await ImageManipulator.manipulateAsync(
-            result.assets[0].uri,
-            [{ resize: { width: 800 } }], // Compress width to 800px, height will adjust automatically to 1:1
-            { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
-          );
-
-          setFaceImage(manipResult.uri);
-        } catch (manipError: any) {
-          console.error("Image manipulation error:", manipError);
-          // Fallback: Si la manipulación falla (ej. incompatibilidad Web con HEIC o falta de binarios), usamos la original
-          setFaceImage(result.assets[0].uri);
-        }
-      }
+      await processImageResult(result);
     } catch (error: any) {
-      alert("Uh oh, no pudimos abrir la galería: " + (error?.message || String(error)));
+      alert("No pudimos abrir la galería: " + (error?.message || String(error)));
     }
+  };
+
+  const takeImageWithCamera = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        alert("Necesitamos permisos para acceder a tu cámara.");
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      await processImageResult(result);
+    } catch (error: any) {
+      alert("No pudimos abrir la cámara: " + (error?.message || String(error)));
+    }
+  };
+
+  const clearFaceImage = () => {
+    setFaceImage(null);
   };
 
   const handleGenerate = () => {
@@ -86,11 +110,30 @@ export default function EditorScreen() {
         />
 
         <Text style={styles.label}>Rostro a intercambiar (Opcional)</Text>
-        <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-          <Text style={styles.uploadButtonText}>
-            {faceImage ? 'Rostro seleccionado ✓ (Toca para cambiar)' : 'Subir foto del rostro'}
-          </Text>
-        </TouchableOpacity>
+        
+        {faceImage ? (
+          <View style={styles.selectedFaceContainer}>
+            <View style={styles.selectedFaceInfo}>
+              <Ionicons name="checkmark-circle" size={24} color="#00FF88" />
+              <Text style={styles.selectedFaceText}>Rostro seleccionado</Text>
+            </View>
+            <TouchableOpacity style={styles.clearFaceButton} onPress={clearFaceImage}>
+              <Ionicons name="trash-outline" size={20} color="#FF4444" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.imageButtonsRow}>
+            <TouchableOpacity style={styles.actionButton} onPress={takeImageWithCamera}>
+              <Ionicons name="camera-outline" size={24} color="#00FF88" />
+              <Text style={styles.actionButtonText}>Cámara</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.actionButton} onPress={pickImageFromGallery}>
+              <Ionicons name="images-outline" size={24} color="#00FF88" />
+              <Text style={styles.actionButtonText}>Galería</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       <TouchableOpacity style={styles.generateButton} onPress={handleGenerate}>
@@ -169,20 +212,52 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
   },
-  uploadButton: {
-    backgroundColor: '#2A2A2A',
-    borderWidth: 1,
-    borderColor: '#444',
-    borderStyle: 'dashed',
-    borderRadius: 12,
-    padding: 24,
-    alignItems: 'center',
+  imageButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 8,
   },
-  uploadButtonText: {
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: '#1A1A1A',
+    borderWidth: 1,
+    borderColor: '#333',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 4,
+  },
+  actionButtonText: {
+    color: '#FFF',
+    fontWeight: '600',
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  selectedFaceContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#1A2A1A', // Slight green tint
+    borderWidth: 1,
+    borderColor: '#00FF88',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  selectedFaceInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  selectedFaceText: {
     color: '#00FF88',
     fontWeight: '600',
     fontSize: 16,
+    marginLeft: 8,
+  },
+  clearFaceButton: {
+    padding: 8,
   },
   generateButton: {
     backgroundColor: '#00E676',
