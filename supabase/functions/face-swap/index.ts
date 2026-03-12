@@ -11,40 +11,64 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  const debugLogs: string[] = [];
+  const log = (...args: any[]) => {
+    const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+    console.log(msg);
+    debugLogs.push(msg);
+  };
+
   try {
     const { templateImageUrl, swapImageBase64 } = await req.json()
 
+    log("--- DEBUG: Inicia Proceso Face Swap ---");
+    log("Template URL:", templateImageUrl);
+    log("Swap Image (primeros 50 caracteres):", swapImageBase64?.substring(0, 50));
+
     if (!templateImageUrl || !swapImageBase64) {
+      log("ERROR: Faltan parámetros");
       throw new Error("Missing images input")
     }
 
-    // Call fal.ai face swap model
-    const result = await fal.subscribe("fal-ai/face-swap", {
-      input: {
-        base_image_url: templateImageUrl,
-        swap_image_url: swapImageBase64,
-      },
-      logs: true,
-      onQueueUpdate: (update) => {
-        if (update.status === "IN_PROGRESS") {
-          update.logs.map((log) => log.message).forEach(console.log)
+    // Call fal.ai face swap model (Half Moon AI version)
+    const modelId = "half-moon-ai/ai-face-swap/faceswapimage";
+    log("Llamando fal.run con:", modelId);
+
+    let result;
+    try {
+      result = await fal.run(modelId, {
+        input: {
+          source_face_url: swapImageBase64,
+          target_image_url: templateImageUrl,
         }
-      },
-    })
+      });
+      log("IA result exitoso");
+    } catch (apiError) {
+      log("API ERROR DETECTED:", apiError.message || apiError);
+      
+      log("Intentando fallback al modelo básico de Fal...");
+      result = await fal.subscribe("fal-ai/face-swap", {
+        input: {
+          base_image_url: templateImageUrl,
+          swap_image_url: swapImageBase64,
+        }
+      });
+      log("Fallback completado");
+    }
 
     return new Response(
-      JSON.stringify(result),
+      JSON.stringify({ ...result, debugLogs }),
       { 
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
       },
     )
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message || String(error) }),
+      JSON.stringify({ error: error.message || String(error), debugLogs }),
       { 
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200, // Retornamos 200 para que supabase-js pueda leer el cuerpo de la respuesta con el motivo de error
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400 
       },
     )
   }

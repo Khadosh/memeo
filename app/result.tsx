@@ -55,9 +55,16 @@ export default function ResultScreen() {
           }
         });
 
-        console.log("Edge Function Response", swapData, swapError);
+        // Debugging logs from Edge Function
+        if (swapData && swapData.debugLogs) {
+          console.log("--- EDGE FUNCTION INTERNAL LOGS ---");
+          swapData.debugLogs.forEach((l: string) => console.log("EF:", l));
+        }
 
-        if (swapError) throw new Error("Error al generar meme: " + swapError.message + " | " + JSON.stringify(swapError));
+        if (swapError) {
+          console.error("Swap Error Object:", swapError);
+          throw new Error("Error al generar meme: " + swapError.message);
+        }
 
         // fal.ai returns { data: { image: { url: '...' } }, requestId: '...' }
         if (swapData && swapData.data && swapData.data.image && swapData.data.image.url) {
@@ -74,6 +81,7 @@ export default function ResultScreen() {
       } catch (err) {
         if (err instanceof Error) {
           setErrorMsg(err.message);
+          console.error("Frontend Error:", err.message);
         } else {
           setErrorMsg("Error desconocido");
         }

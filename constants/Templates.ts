@@ -64,5 +64,11 @@ export const TEMPLATES = [
     name: 'Tom Cruise Laughing',
     image: require('@/assets/memes/tom-cruise.jpeg'),
     publicUrl: 'https://i.imgflip.com/1a55a.jpg' // Real 'Tom Cruise Laughing' meme URL
+  },
+  {
+    id: 'simpsons-thumbs-up',
+    name: 'Simpsons Thumbs Up',
+    image: require('@/assets/memes/simpsons-thumbs-up.jpg'),
+    publicUrl: 'https://i.imgflip.com/422zzi.png'
   }
 ];
