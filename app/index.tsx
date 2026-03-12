@@ -2,8 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { HeaderMenu } from '../components/HeaderMenu';
-import { Image as ExpoImage } from 'expo-image';
+import { TopNav } from '../components/TopNav';
 import { TEMPLATES } from '../constants/Templates';
 
 export default function HomeScreen() {
@@ -30,17 +29,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.topNav}>
-        <View style={styles.logoContainer}>
-          <ExpoImage 
-            source={require('../assets/images/logo.svg')} 
-            style={styles.logoImage} 
-            contentFit="contain" 
-          />
-          <Text style={styles.logoText}>Memeo</Text>
-        </View>
-        <HeaderMenu />
-      </View>
+      <TopNav />
 
       <View style={styles.header}>
         <View>
@@ -66,28 +55,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0A0A0A', // Dark aesthetic
-  },
-  topNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-  },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logoImage: {
-    width: 36,
-    height: 36,
-    marginRight: 12,
-  },
-  logoText: {
-    color: '#00FF88',
-    fontSize: 26,
-    fontWeight: '900',
-    fontStyle: 'italic',
   },
   header: {
     flexDirection: 'row',

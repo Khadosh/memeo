@@ -17,7 +17,7 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false, title: 'Elige tu Meme' }} />
         <Stack.Screen name="editor" options={{ title: 'Editar Meme' }} />
-        <Stack.Screen name="result" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="result" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

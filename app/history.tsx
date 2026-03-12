@@ -4,6 +4,7 @@ import * as Sharing from 'expo-sharing';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { TopNav } from '../components/TopNav';
 import { deleteMemeFromHistory, getMemeHistory, MemeHistoryItem } from '../lib/history';
 
 export default function HistoryScreen() {
@@ -78,12 +79,9 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Volver</Text>
-        </TouchableOpacity>
+      <TopNav showBackBtn />
+      <View style={styles.titleContainer}>
         <Text style={styles.headerTitle}>Mi Historial</Text>
-        <View style={{ width: 60 }} />
       </View>
 
       {loading ? (
@@ -113,24 +111,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0A0A0A',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  titleContainer: {
     paddingHorizontal: 20,
-    marginTop: 20,
+    marginTop: 12,
     marginBottom: 16,
   },
-  backButton: {
-    paddingVertical: 8,
-  },
-  backButtonText: {
-    color: '#00FF88',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#FFF',
   },

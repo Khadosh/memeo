@@ -2,6 +2,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { TopNav } from '../components/TopNav';
 import { TEMPLATES } from '../constants/Templates';
 import { saveMemeToHistory } from '../lib/history';
 import { supabase } from '../lib/supabase';
@@ -127,6 +129,9 @@ export default function ResultScreen() {
     if (savedToHistory || !resultImageUrl) return;
 
     try {
+      // Adding a small delay to ensure the image is fully rendered on screen before capturing.
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       if (Platform.OS === 'web') {
         const html2canvas = require('html2canvas');
         const canvas = await html2canvas(memeViewRef.current, { useCORS: true, allowTaint: true });
@@ -139,12 +144,13 @@ export default function ResultScreen() {
       }
       setSavedToHistory(true);
     } catch (err) {
-      console.error("Error saving to history automatically:", err);
+      console.error("Error saving to history:", err);
     }
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <TopNav showBackBtn />
       {generating ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#00FF88" />
@@ -180,12 +186,18 @@ export default function ResultScreen() {
             </Text>
           </TouchableOpacity>
 
+          {!savedToHistory && (
+            <TouchableOpacity style={styles.saveButton} onPress={handleCaptureAndSave} disabled={isCapturing}>
+              <Text style={styles.saveButtonText}>Guardar en Historial</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity style={styles.backButton} onPress={() => router.navigate('/')}>
             <Text style={styles.backButtonText}>Hacer otro Memeo</Text>
           </TouchableOpacity>
         </View>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -277,6 +289,19 @@ const styles = StyleSheet.create({
   shareButtonText: {
     color: '#000',
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+  saveButton: {
+    backgroundColor: '#333',
+    borderRadius: 16,
+    padding: 16,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  saveButtonText: {
+    color: '#FFF',
+    fontSize: 16,
     fontWeight: 'bold',
   },
   backButton: {

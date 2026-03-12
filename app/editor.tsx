@@ -3,6 +3,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { TopNav } from '../components/TopNav';
 import { TEMPLATES } from '../constants/Templates';
 
 export default function EditorScreen() {
@@ -55,8 +57,10 @@ export default function EditorScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.previewContainer}>
+    <SafeAreaView style={styles.container}>
+      <TopNav showBackBtn />
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.previewContainer}>
         <Image source={template.image} style={styles.memeImage} resizeMode="cover" />
         <Text style={styles.previewTextTop}>{topText || 'TEXTO SUPERIOR'}</Text>
         <Text style={styles.previewTextBottom}>{bottomText || 'TEXTO INFERIOR'}</Text>
@@ -92,7 +96,8 @@ export default function EditorScreen() {
       <TouchableOpacity style={styles.generateButton} onPress={handleGenerate}>
         <Text style={styles.generateButtonText}>Generar Memeo ✨</Text>
       </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
